@@ -8,14 +8,18 @@ exports.register = async (req, res, next) => {
     try {
 
         if (!req.body || Object.keys(req.body).length === 0) {
-            return res.status(400).json({ success: false, error: "No data provided!"});
+            const errmsg = "No data provided in request body";
+            console.log(errmsg);
+            return res.status(400).json({ success: false, error: "No data provided in request body"});
         } 
 
         const { name, email, password, role } = req.body;
 
-        // if (!name || !email || !password ) {
-        //     return res.status(400).json({ success: false, error: "Please provide name, email and password"});
-        // }
+        if (!name || !email || !password ) {
+            const errmsg = "Please provide name, email and password";
+            console.log(errmsg);
+            return res.status(400).json({ success: false, error: errmsg});
+        }
 
         const user = await User.create({
             name,
