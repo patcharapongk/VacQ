@@ -1,5 +1,18 @@
 const User = require('../models/UserModel');
 
+const sendTokenResponse = (user, statusCode, res) => {
+    const token = user.getSignedJwtToken();
+    const options = { 
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+        httpOnly: true
+    };
+
+    if (process.env.NODE_ENV === 'production') {
+        options.secure = true;
+    }   
+    res.status(statusCode).cookie('token', token, options).json({ success: true, token});
+}
+
 
 //@desc    Register user
 //@route   POST /api/v1/auth/register
@@ -37,6 +50,7 @@ exports.register = async (req, res, next) => {
         res.status(400).json({ success: false, error: error.message });
         console.log(err.stack);
     }
+    sendTokenResponse(user, 200, res);
 }
 
 //@desc    Login user  
@@ -58,7 +72,8 @@ exports.login = async (req, res, next) => {
 
     // Check if password matches
     const isMatch = await user.matchPassword(password);
-
-    const token = user.getSignedJwtToken();
-    res.status(200).json({ success: true, token});
-}
+    if (!isMatch) {
+        return res.status(401).json({ success: false, error: "Invalid credentials"});
+    }
+    sendTokenResponse(user, 200, res);
+}   
